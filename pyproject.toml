@@ -1,0 +1,28 @@
+[project]
+name = "google-sheets-mcp-server"
+version = "1.0.0"
+description = "Google Sheets MCP Server with HTTP+Streamable transport for Dify integration"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp>=2.11.0",
+    "google-auth>=2.28.1",
+    "google-auth-oauthlib>=1.2.0",
+    "google-api-python-client>=2.117.0",
+    "pydantic>=2.11.7",
+    "python-dotenv>=1.1.0",
+    "uvicorn>=0.35.0",
+]
+
+[project.scripts]
+mcp-google-sheets-server = "google_sheets_mcp_server:main"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"

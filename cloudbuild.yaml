@@ -1,0 +1,33 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/google-sheets-mcp-server:$BUILD_ID', '.']
+  
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/google-sheets-mcp-server:$BUILD_ID']
+  
+  # Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'google-sheets-mcp-server'
+      - '--image=gcr.io/$PROJECT_ID/google-sheets-mcp-server:$BUILD_ID'
+      - '--platform=managed'
+      - '--region=us-central1'
+      - '--allow-unauthenticated'
+      - '--port=8000'
+      - '--set-env-vars=SERVICE_ACCOUNT_PATH=/app/service-account-key.json'
+      - '--memory=512Mi'
+      - '--cpu=1'
+      - '--max-instances=10'
+      - '--timeout=300'
+
+# Store the image in Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/google-sheets-mcp-server:$BUILD_ID'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
