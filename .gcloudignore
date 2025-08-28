@@ -1,0 +1,12 @@
+# Default gcloudignore rules
+.gcloudignore
+.git
+.gitignore
+
+# Keep all files needed for build
+!README.md
+!pyproject.toml
+!Dockerfile
+!cloudbuild.yaml
+!src/
+!service-account-key.json

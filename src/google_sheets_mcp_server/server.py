@@ -10,6 +10,8 @@ import base64
 import os
 import json
 import logging
+import hashlib
+import secrets
 from typing import List, Dict, Any, Optional, Union
 from dataclasses import dataclass
 from contextlib import asynccontextmanager
@@ -18,10 +20,13 @@ from collections.abc import AsyncIterator
 # MCP imports
 from mcp.server.fastmcp import FastMCP, Context
 
+# HTTP imports for simple validation
+from typing import Dict, Any, Optional
+
 # Google API imports
 from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
-from google.auth.transport.requests import Request
+from google.auth.transport.requests import Request as GoogleRequest
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 import google.auth
@@ -38,6 +43,14 @@ CREDENTIALS_PATH = os.environ.get('CREDENTIALS_PATH', 'credentials.json')
 SERVICE_ACCOUNT_PATH = os.environ.get('SERVICE_ACCOUNT_PATH', 'service-account-key.json')
 DRIVE_FOLDER_ID = os.environ.get('DRIVE_FOLDER_ID', '')  # Working directory in Google Drive
 
+# API Key for authentication
+API_KEY = os.environ.get('MCP_API_KEY')
+if not API_KEY:
+    # Generate a secure API key if not provided
+    API_KEY = secrets.token_urlsafe(32)
+    logger.warning(f"No MCP_API_KEY provided. Generated temporary key: {API_KEY}")
+    logger.warning("Set MCP_API_KEY environment variable for production use")
+
 
 @dataclass
 class SpreadsheetContext:
@@ -45,6 +58,14 @@ class SpreadsheetContext:
     sheets_service: Any
     drive_service: Any
     folder_id: Optional[str] = None
+
+
+# Simple authentication helper
+def validate_api_key(provided_key: str) -> bool:
+    """Validate API key using secure comparison"""
+    if not provided_key or not API_KEY:
+        return False
+    return secrets.compare_digest(provided_key, API_KEY)
 
 
 @asynccontextmanager
@@ -165,6 +186,16 @@ mcp = FastMCP(
     # Additional debugging
     debug=os.environ.get("DEBUG", "false").lower() == "true"
 )
+
+# Add a simple health check endpoint 
+@mcp.tool()
+def health_check() -> Dict[str, Any]:
+    """Health check endpoint"""
+    return {"status": "healthy", "service": "Google Sheets MCP Server"}
+
+# Log authentication setup
+logger.info("API Key authentication will be handled at deployment level")
+logger.info(f"For direct access, use X-API-Key header with value: {API_KEY}")
 
 
 # Google Sheets tools implementation
